@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/34283817/README.md)
+
 # OCS AI 网关
 
 给 [OCS 网课助手](https://github.com/ocsjs) 用的本地 AI 题库服务。
@@ -23,6 +23,7 @@
 ## 一、快速开始
 
 ### 1. 准备 uv（二选一）
+
 
 **方式 A：绿色便携（推荐，整个文件夹拷走就能用）**
 
