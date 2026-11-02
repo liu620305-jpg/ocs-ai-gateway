@@ -1,0 +1,21 @@
+# Python 运行环境（uv 自动生成，不要提交）
+.venv/
+__pycache__/
+*.pyc
+
+# 本地配置与数据（含 API Key，绝对不能提交）
+.env
+data/providers.json
+data/answers.db
+data/*.broken
+data/*.tmp
+
+# 便携版 uv 可执行文件（31MB 二进制，请单独下载，不要放进仓库）
+uv.exe
+uvx.exe
+uvw.exe
+
+# 系统与日志杂项
+.DS_Store
+Thumbs.db
+*.log
