@@ -1,5 +1,5 @@
 @echo off
-title æ‰“å¼€ OCS AI ç®¡ç†å°
+title ´ò¿ª OCS AI ¹ÜÀíÌ¨
 
 set "PORT=8000"
 set "ADMIN=http://127.0.0.1:%PORT%/admin"
@@ -11,13 +11,13 @@ if not errorlevel 1 (
 )
 
 echo ================================================
-echo    ç½‘å…³è¿˜æ²¡æœ‰å¯åŠ¨
+echo    Íø¹Ø»¹Ã»ÓÐÆô¶¯
 echo ================================================
 echo.
-echo è¯·å…ˆåŒå‡»ã€Œstart.batã€ï¼Œç­‰çª—å£é‡Œå‡ºçŽ°
+echo ÇëÏÈË«»÷¡¸start.bat¡¹£¬µÈ´°¿ÚÀï³öÏÖ
 echo   Uvicorn running on http://127.0.0.1:%PORT%
-echo ä¹‹åŽå†åŒå‡»æœ¬è„šæœ¬ã€‚
+echo Ö®ºóÔÙË«»÷±¾½Å±¾¡£
 echo.
-echo çŽ°åœ¨ä¸ºä½ å°è¯•å¯åŠ¨ç½‘å…³...
+echo ÏÖÔÚÎªÄã³¢ÊÔÆô¶¯Íø¹Ø...
 echo.
 start "" "%~dp0start.bat"
