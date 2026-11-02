@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OCS AI 网关 · 管理台</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --line: #e6e8ee;
+    --text: #16191f;
+    --muted: #6b7280;
+    --accent: #2f6bff;
+    --accent-soft: #eef3ff;
+    --ok: #12a150;
+    --ok-soft: #e9f8ef;
+    --warn: #c77b16;
+    --danger: #d92d20;
+    --danger-soft: #fef0ef;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 24px -12px rgba(16, 24, 40, .12);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 64px; }
+  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+  h1 { font-size: 21px; margin: 0 0 6px; letter-spacing: -.3px; }
+  .sub { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .dot.on { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+  .dot.off { background: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
+
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--text);
+    padding: 8px 14px; border-radius: 10px; transition: .15s; }
+  button:hover { border-color: #cfd4de; background: #fafbfc; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover { background: #255ce0; }
+  button.ghost { border-color: transparent; color: var(--muted); padding: 6px 9px; border-radius: 8px; background: transparent; }
+  button.ghost:hover { background: #f1f3f7; color: var(--text); }
+  button.danger { color: var(--danger); }
+  button.danger:hover { background: var(--danger-soft); border-color: #f5c2bd; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .stat b { display: block; font-size: 22px; font-weight: 650; letter-spacing: -.5px; }
+  .stat span { color: var(--muted); font-size: 12px; }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden; margin-bottom: 18px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .panel-head h2 { font-size: 14px; margin: 0; font-weight: 600; }
+  .panel-head .hint { color: var(--muted); font-size: 12px; }
+
+  .provider { display: flex; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); align-items: flex-start; }
+  .provider:last-child { border-bottom: none; }
+  .provider.disabled { opacity: .55; }
+  .order { display: flex; flex-direction: column; gap: 3px; padding-top: 3px; }
+  .order button { width: 24px; padding: 2px 0; font-size: 10px; line-height: 1.2; border-radius: 6px; color: var(--muted); }
+  .order button:disabled { opacity: .28; }
+  .p-main { flex: 1; min-width: 0; }
+  .p-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .p-title strong { font-weight: 600; }
+  .badge { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: #f1f3f7; color: var(--muted); border: 1px solid transparent; }
+  .badge.model { background: var(--accent-soft); color: #2b5bd7; }
+  .badge.on { background: var(--ok-soft); color: #0d7a3d; }
+  .p-meta { color: var(--muted); font-size: 12px; margin-top: 4px; word-break: break-all; }
+  .p-meta code { background: #f4f6fa; padding: 1px 5px; border-radius: 5px; font-size: 11px; }
+  .p-stat { margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .p-stat .err { color: var(--danger); }
+  .p-actions { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 280px; }
+  .p-actions button { font-size: 12px; padding: 5px 10px; }
+
+  .empty { padding: 44px 20px; text-align: center; color: var(--muted); }
+  .empty b { display: block; color: var(--text); margin-bottom: 6px; }
+
+  .tips { padding: 16px 18px; }
+  .tips p { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+  .code { position: relative; background: #0f1420; color: #d7e2f5; border-radius: 10px; padding: 14px 16px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.7;
+    overflow: auto; max-height: 260px; white-space: pre; }
+  .code button { position: absolute; top: 10px; right: 10px; background: #1e2638; border-color: #2b3549; color: #cbd6e8;
+    font-size: 12px; padding: 4px 10px; }
+  .steps { margin: 0 0 12px; padding-left: 18px; color: var(--muted); font-size: 13px; }
+  .steps li { margin-bottom: 4px; }
+
+  .modal-mask { position: fixed; inset: 0; background: rgba(15, 20, 32, .45); display: none;
+    align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+  .modal-mask.show { display: flex; }
+  .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 520px; max-height: 90vh; overflow: auto;
+    box-shadow: 0 24px 60px -12px rgba(15, 20, 32, .35); }
+  .modal-head { padding: 18px 22px 0; }
+  .modal-head h3 { margin: 0; font-size: 16px; }
+  .modal-head p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+  .modal-body { padding: 16px 22px; display: grid; gap: 13px; }
+  .modal-foot { padding: 0 22px 20px; display: flex; justify-content: flex-end; gap: 8px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  label .req { color: var(--danger); }
+  input, select { width: 100%; font: inherit; padding: 9px 11px; border: 1px solid var(--line);
+    border-radius: 9px; background: #fff; color: var(--text); outline: none; }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+  .field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 12px); background: #101828; color: #fff;
+    padding: 10px 18px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: .22s; z-index: 90;
+    max-width: 84vw; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.err { background: #b42318; }
+  .toast.ok { background: #067647; }
+  .inline { margin-top: 6px; font-size: 12px; padding: 7px 10px; border-radius: 8px; display: none; }
+  .inline.show { display: block; }
+  .inline.ok { background: var(--ok-soft); color: #0d7a3d; }
+  .inline.err { background: var(--danger-soft); color: #a32318; }
+
+  @media (max-width: 720px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .provider { flex-wrap: wrap; }
+    .p-actions { max-width: none; justify-content: flex-start; }
+    .row2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>OCS AI 网关</h1>
+      <div class="sub">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">正在连接…</span>
+        <span>·</span>
+        <span id="addrText"></span>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button id="btnRefresh" class="ghost" title="刷新数据">刷新</button>
+      <button id="btnAdd" class="primary">+ 添加 AI</button>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b id="sTotal">0</b><span>累计答题</span></div>
+    <div class="stat"><b id="sCached">0</b><span>缓存命中</span></div>
+    <div class="stat"><b id="sFailover">0</b><span>故障切换</span></div>
+    <div class="stat"><b id="sCache">0</b><span>缓存题目数</span></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>AI 队列</h2>
+      <span class="hint">按顺序调用，失败自动换下一个</span>
+    </div>
+    <div id="list"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>接入 OCS（只需粘贴一次）</h2>
+      <span class="hint">悬浮窗 → 设置 → 题库配置</span>
+    </div>
+    <div class="tips">
+      <ol class="steps">
+        <li>在 OCS 悬浮面板里打开「设置 → 题库配置」，清空原有内容。</li>
+        <li>点下面的「复制 JSON」，粘贴进去并保存。</li>
+        <li>回到课程页即可自动答题；本页增删 AI 后立即生效，无需重配。</li>
+      </ol>
+      <div class="code"><button id="btnCopy">复制 JSON</button><span id="cfgText"></span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>缓存</h2>
+      <span class="hint">同一道题只花一次 token</span>
+    </div>
+    <div class="tips">
+      <p>当前缓存 <b id="cacheCount">0</b> 道题。改了提示词、换了模型、或者发现某道题答案记错了，清空缓存后重新作答即可。</p>
+      <button id="btnClearCache" class="danger">清空题库缓存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="mask">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">添加 AI</h3>
+      <p>支持任何兼容 OpenAI 协议的服务：DeepSeek、通义、硅基流动、Kimi、智谱、Ollama…</p>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label>名称 <span class="req">*</span></label>
+        <input id="fName" placeholder="例如 DeepSeek 主力" />
+      </div>
+      <div>
+        <label>Base URL <span class="req">*</span></label>
+        <input id="fBase" placeholder="https://api.deepseek.com/v1" />
+        <div class="field-hint">一般以 /v1 结尾；OpenAI 官方可填 https://api.openai.com/v1</div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>模型名称 <span class="req">*</span></label>
+          <input id="fModel" placeholder="deepseek-chat" />
+        </div>
+        <div>
+          <label>接口类型</label>
+          <select id="fType">
+            <option value="chat_completions">Chat Completions（默认）</option>
+            <option value="responses">Responses API</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label>API Key <span class="req" id="keyReq">*</span></label>
+        <input id="fKey" type="password" placeholder="sk-..." autocomplete="off" />
+        <div class="field-hint" id="keyHint">只保存在本机 data/providers.json</div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>温度（可留空）</label>
+          <input id="fTemp" placeholder="0 ~ 2" />
+        </div>
+        <div>
+          <label>超时（秒）</label>
+          <input id="fTimeout" placeholder="30" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="btnCancel">取消</button>
+      <button id="btnSave" class="primary">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const state = { providers: [], editing: null, token: localStorage.getItem('gw_token') || '' };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function headers(extra) {
+  const h = Object.assign({ 'Content-Type': 'application/json' }, extra || {});
+  if (state.token) h['X-Gateway-Token'] = state.token;
+  return h;
+}
+
+function toast(msg, kind) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (kind ? ' ' + kind : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = 'toast'; }, 2600);
+}
+
+async function api(path, options) {
+  const res = await fetch(path, Object.assign({ headers: headers() }, options || {}));
+  if (res.status === 401) {
+    const input = prompt('这个管理台设置了访问口令，请输入 GATEWAY_TOKEN：');
+    if (input) { state.token = input; localStorage.setItem('gw_token', input); return api(path, options); }
+    throw new Error('未授权');
+  }
+  if (!res.ok) {
+    let detail = 'HTTP ' + res.status;
+    try { const j = await res.json(); detail = j.detail || detail; } catch (e) {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+function fmtMs(stat) {
+  if (!stat || !stat.calls) return '尚未调用';
+  const avg = Math.round(stat.ms / stat.calls);
+  return `调用 ${stat.calls} 次 · 平均 ${avg}ms` + (stat.fails ? ` · 失败 ${stat.fails}` : '');
+}
+
+function render() {
+  const list = $('list');
+  if (!state.providers.length) {
+    list.innerHTML = '<div class="empty"><b>还没有添加任何 AI</b>点右上角「+ 添加 AI」，填入 Base URL、模型名和 Key 即可。</div>';
+    return;
+  }
+  list.innerHTML = state.providers.map((p, i) => `
+    <div class="provider ${p.enabled ? '' : 'disabled'}">
+      <div class="order">
+        <button data-act="up" data-id="${p.id}" ${i === 0 ? 'disabled' : ''} title="上移">▲</button>
+        <button data-act="down" data-id="${p.id}" ${i === state.providers.length - 1 ? 'disabled' : ''} title="下移">▼</button>
+      </div>
+      <div class="p-main">
+        <div class="p-title">
+          <strong>${esc(p.name)}</strong>
+          <span class="badge model">${esc(p.model)}</span>
+          <span class="badge ${p.enabled ? 'on' : ''}">${p.enabled ? '已启用' : '已停用'}</span>
+          ${p.api_type === 'responses' ? '<span class="badge">Responses</span>' : ''}
+        </div>
+        <div class="p-meta">${esc(p.base_url)} · Key <code>${esc(p.api_key_masked || '未填写')}</code> · 超时 ${p.timeout}s</div>
+        <div class="p-stat">
+          ${fmtMs(p.stat)}
+          ${p.stat && p.stat.last_error ? `<span class="err"> · 最近错误：${esc(p.stat.last_error)}</span>` : ''}
+        </div>
+        <div class="inline" id="t-${p.id}"></div>
+      </div>
+      <div class="p-actions">
+        <button data-act="test" data-id="${p.id}">测试</button>
+        <button data-act="edit" data-id="${p.id}">编辑</button>
+        <button data-act="toggle" data-id="${p.id}">${p.enabled ? '停用' : '启用'}</button>
+        <button data-act="del" data-id="${p.id}" class="danger">删除</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderConfig() {
+  const origin = location.origin;
+  const data = { title: '${title}', options: '${options}', type: '${type}' };
+  if (state.token) data.token = state.token;
+  const cfg = [{
+    name: 'OCS AI 网关',
+    homepage: origin + '/',
+    url: origin + '/query',
+    method: 'get',
+    type: 'GM_xmlhttpRequest',
+    contentType: 'json',
+    data: data,
+    handler: 'return (res)=>res.code !== 0 ? [res.message, undefined] : [res.data.question,res.data.answer,{ai: res.data.ai}]'
+  }];
+  $('cfgText').textContent = JSON.stringify(cfg, null, 2);
+}
+
+async function load() {
+  try {
+    const data = await api('/api/state');
+    state.providers = data.providers;
+    $('sTotal').textContent = data.stats.total;
+    $('sCached').textContent = data.stats.cached;
+    $('sFailover').textContent = data.stats.failovers;
+    $('sCache').textContent = data.cache.count;
+    $('cacheCount').textContent = data.cache.count;
+    $('addrText').textContent = location.host;
+    const enabled = data.providers.filter(p => p.enabled).length;
+    $('statusDot').className = 'dot ' + (enabled ? 'on' : 'off');
+    $('statusText').textContent = enabled ? `运行中 · ${enabled}/${data.providers.length} 个 AI 已启用` : '没有启用的 AI，暂时无法答题';
+    render();
+    renderConfig();
+  } catch (err) {
+    $('statusDot').className = 'dot off';
+    $('statusText').textContent = '连接失败：' + err.message;
+  }
+}
+
+function openModal(provider) {
+  state.editing = provider || null;
+  $('modalTitle').textContent = provider ? '编辑 AI' : '添加 AI';
+  $('fName').value = provider ? provider.name : '';
+  $('fBase').value = provider ? provider.base_url : '';
+  $('fModel').value = provider ? provider.model : '';
+  $('fType').value = provider ? provider.api_type : 'chat_completions';
+  $('fKey').value = '';
+  $('fTemp').value = provider && provider.temperature != null ? provider.temperature : '';
+  $('fTimeout').value = provider ? provider.timeout : 30;
+  $('keyReq').style.display = provider ? 'none' : '';
+  $('fKey').placeholder = provider ? '留空表示不修改' : 'sk-...';
+  $('keyHint').textContent = provider ? '留空则保持原 Key 不变' : '只保存在本机 data/providers.json';
+  $('mask').classList.add('show');
+  setTimeout(() => $('fName').focus(), 40);
+}
+
+function closeModal() { $('mask').classList.remove('show'); }
+
+async function save() {
+  const payload = {
+    name: $('fName').value.trim(),
+    base_url: $('fBase').value.trim(),
+    model: $('fModel').value.trim(),
+    api_type: $('fType').value,
+    timeout: parseInt($('fTimeout').value, 10) || 30,
+    temperature: $('fTemp').value.trim() === '' ? null : parseFloat($('fTemp').value)
+  };
+  const key = $('fKey').value.trim();
+  if (key) payload.api_key = key;
+
+  if (!payload.name || !payload.base_url || !payload.model) return toast('名称、Base URL、模型名称都要填', 'err');
+  if (!state.editing && !key) return toast('请填写 API Key', 'err');
+
+  try {
+    if (state.editing) await api('/api/providers/' + state.editing.id, { method: 'PUT', body: JSON.stringify(payload) });
+    else await api('/api/providers', { method: 'POST', body: JSON.stringify(payload) });
+    closeModal();
+    toast('已保存', 'ok');
+    load();
+  } catch (err) { toast('保存失败：' + err.message, 'err'); }
+}
+
+document.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-act]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const provider = state.providers.find(p => p.id === id);
+  if (!provider) return;
+  const act = btn.dataset.act;
+
+  if (act === 'edit') return openModal(provider);
+  if (act === 'up' || act === 'down') {
+    await api('/api/providers/' + id + '/move', { method: 'POST', body: JSON.stringify({ direction: act === 'up' ? -1 : 1 }) });
+    return load();
+  }
+  if (act === 'toggle') {
+    await api('/api/providers/' + id + '/toggle', { method: 'POST', body: JSON.stringify({}) });
+    return load();
+  }
+  if (act === 'del') {
+    if (!confirm(`确定删除「${provider.name}」？`)) return;
+    await api('/api/providers/' + id, { method: 'DELETE' });
+    toast('已删除', 'ok');
+    return load();
+  }
+  if (act === 'test') {
+    const box = $('t-' + id);
+    box.className = 'inline show';
+    box.textContent = '正在测试…';
+    btn.disabled = true;
+    try {
+      const r = await api('/api/providers/' + id + '/test', { method: 'POST' });
+      box.className = 'inline show ' + (r.ok ? 'ok' : 'err');
+      box.textContent = r.ok
+        ? `✅ 连通正常 · ${r.elapsed_ms}ms · 样例题答 ${r.answer}（期望 ${r.expected}）`
+        : `❌ ${r.error}（${r.elapsed_ms}ms）`;
+    } catch (err) {
+      box.className = 'inline show err';
+      box.textContent = '❌ ' + err.message;
+    } finally { btn.disabled = false; }
+  }
+});
+
+$('btnAdd').onclick = () => openModal(null);
+$('btnCancel').onclick = closeModal;
+$('btnSave').onclick = save;
+$('btnRefresh').onclick = () => { load(); toast('已刷新'); };
+$('mask').onclick = (e) => { if (e.target === $('mask')) closeModal(); };
+$('btnClearCache').onclick = async () => {
+  if (!confirm('清空后所有题目都会重新调用 AI，确定吗？')) return;
+  const r = await api('/api/cache/clear', { method: 'POST' });
+  toast(`已清空 ${r.cleared} 条缓存`, 'ok');
+  load();
+};
+$('btnCopy').onclick = async () => {
+  const text = $('cfgText').textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('已复制，去 OCS 题库配置里粘贴', 'ok');
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+    toast('已复制', 'ok');
+  }
+};
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && $('mask').classList.contains('show')) save();
+});
+
+load();
+setInterval(() => { if (!$('mask').classList.contains('show')) load(); }, 15000);
+</script>
+</body>
+</html>
