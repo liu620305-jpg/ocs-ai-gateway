@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "你的名字" }]
+authors = [{ name = "liu620305-jpg" }]
 keywords = ["ocsjs", "ocs", "answererwrapper", "fastapi", "llm", "ai"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -23,8 +23,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/你的用户名/ocs-ai-gateway"
-Issues = "https://github.com/你的用户名/ocs-ai-gateway/issues"
+Homepage = "https://github.com/liu620305-jpg/ocs-ai-gateway"
+Issues = "https://github.com/liu620305-jpg/ocs-ai-gateway/issues"
 
 [tool.uv]
 package = false
