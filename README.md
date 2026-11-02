@@ -1,3 +1,4 @@
+[README.md](https://github.com/user-attachments/files/34283817/README.md)
 # OCS AI 网关
 
 给 [OCS 网课助手](https://github.com/ocsjs) 用的本地 AI 题库服务。
@@ -15,7 +16,7 @@
 
 对外暴露的接口和 OCS 的 `AnswererWrapper` 完全兼容，OCS 那边配置一次就行。
 
-![管理台预览](预览.png)
+![管理台预览](preview.png)
 
 ---
 
@@ -25,12 +26,12 @@
 
 **方式 A：绿色便携（推荐，整个文件夹拷走就能用）**
 
-去 [uv releases](https://github.com/astral-sh/uv/releases/latest) 下载 `uv-x86_64-pc-windows-msvc.zip`，解压出 `uv.exe`，放到本项目根目录，和 `启动网关.bat` 放在一起：
+去 [uv releases](https://github.com/astral-sh/uv/releases/latest) 下载 `uv-x86_64-pc-windows-msvc.zip`，解压出 `uv.exe`，放到本项目根目录，和 `start.bat` 放在一起：
 
 ```
 ocs-ai-gateway\
 ├── uv.exe          ← 放这里
-├── 启动网关.bat
+├── start.bat
 └── main.py
 ```
 
@@ -46,7 +47,7 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 两种方式都会被自动识别，不需要改脚本。
 
-### 2. 双击 `启动网关.bat`
+### 2. 双击 `start.bat`
 
 首次运行会自动装依赖（几分钟），然后：
 
@@ -72,7 +73,7 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 之后回到课程页就会自动答题。本页增删 AI 立即生效，**不需要再动 OCS 配置**。
 
-> 以后每次使用：双击 `启动网关.bat` → 等窗口起来 → 开 OCS 答题。想单独打开管理台就双击 `管理AI.bat`。
+> 以后每次使用：双击 `start.bat` → 等窗口起来 → 开 OCS 答题。想单独打开管理台就双击 `admin.bat`。
 
 ---
 
@@ -134,19 +135,21 @@ ocs-ai-gateway/
 │   └── static/admin.html   管理台页面
 ├── data/                   运行时生成：providers.json、answers.db
 ├── tests/test_gateway.py   15 个测试
-├── 启动网关.bat
-└── 管理AI.bat
+├── start.bat
+└── admin.bat
 ```
 
-## 六、开发与自测
+## 六、开发与贡献
 
 ```bash
-uv sync
-uv run python -m unittest discover -s tests -v
-uv run fastapi dev main.py      # 带热重载的开发模式
+uv sync                                          # 安装依赖
+uv run python -m unittest discover -s tests -v   # 跑 15 个测试
+uv run fastapi dev main.py                       # 热重载开发模式
 ```
 
-`/docs` 有自动生成的接口文档，可以手动调 `GET /query` 验证。
+- `/docs` 有自动生成的接口文档，可以手动调 `GET /query` 验证
+- 提交前请确保测试全绿
+- 新增题型时同步更新 `app/parsing.py` 的归一化表、提示词、解析器，并补上对应测试
 
 ---
 
@@ -186,25 +189,13 @@ uv run fastapi dev main.py      # 带热重载的开发模式
 
 ---
 
-## 九、开发与贡献
-
-```bash
-uv sync
-uv run python -m unittest discover -s tests -v   # 15 个测试
-uv run fastapi dev main.py                       # 热重载开发
-```
-
-提交前请确保 `uv run python -m unittest discover -s tests -v` 全绿。新增题型时同步更新 `app/parsing.py` 的归一化表、提示词、解析器和测试。
-
----
-
-## 十、免责声明
+## 九、免责声明
 
 本工具仅供个人学习与技术研究使用。使用者应自行确认使用方式符合所在课程与平台的规定，并承担由此产生的一切后果。AI 生成的答案可能有误，请勿用于正式考试或需要准确性的场景。
 
 ---
 
-## 十一、License
+## 十、License
 
 [MIT](LICENSE)
 
